@@ -13,3 +13,7 @@ folder and rename it to `api_key.py`. This file is included in the `.gitignore` 
     - This will install all Python dependencies
 
 4. Look for further instructions within Python files.
+
+## Thoughts/Notes
+1. Are we going to have to convert these images to a gray scale? I am
+wondering if different lighting (cloudy vs sunny day) would change anything?

@@ -130,7 +130,7 @@ def extract_image(lat, lng, folder_name):
     # Define parameters for street view API
     # Will create a list of params for each heading
     params = [{
-        'size': '600x300',  # Max 640x640 pixels
+        'size': '256x256',  # Max 640x640 pixels
         'location': f'{lat},{lng}',  # Coordinates
         'heading': heading,  # Direction TODO: We may want to experiment?
         'pitch': '0',  # Orientation (up vs down)
