@@ -111,7 +111,7 @@ def extract_image(lat, lng, folder_name):
     folder_name : String
         Location to save our files
     """
-    folder_path = f'downloads/{folder_name}'
+    folder_path = f'image_downloads/{folder_name}'
 
     # Create headings 0-315 (increments of 45 degrees)
     # NOTE: We will decrease the increments due to cost of extracting images
