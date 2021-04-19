@@ -75,7 +75,7 @@ def extract_all_geocodes():
     data = pd.read_csv(LITTER_INDEX_FILE)
 
     # Truncating data for now because of cost... Serves as testing for now
-    data = data.iloc[:25]
+    data = data.iloc[:5]
 
     # Apply coordinates extractor to every row
     data['geocode_result'] = data.apply(lambda row: extract_geocode(
