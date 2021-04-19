@@ -1,8 +1,0 @@
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=0&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=45&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=90&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=135&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=180&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=225&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=270&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74
-https://maps.googleapis.com/maps/api/streetview?size=600x300&location=39.97232289999999%2C-75.1658526&heading=315&pitch=0&key=AIzaSyCNG3aQLWtJUXnbxvPwDr8VFcNPETwrV74

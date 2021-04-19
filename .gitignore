@@ -1,5 +1,6 @@
 # Other files
 api_key.py
+image_downloads/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
