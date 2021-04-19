@@ -12,6 +12,10 @@ How to run:
     3. Verify data was written to `data/Litter_Index_Blocks_With_Coords.csv`
     4. Verify 'downloads' folder is poplulated with a bunch of images.
 """
+from threading import Thread
+import time
+import os
+
 import pandas as pd
 import googlemaps
 import google_streetview.api
@@ -21,6 +25,12 @@ from api_key import google_api_key  # This is where the API Key lives
 LITTER_INDEX_FILE = "data//Litter_Index_Blocks.csv"
 FINAL_LITTER_INDEX_FILE = "data//Litter_Index_Blocks_With_Coords.csv"
 GMAPS = googlemaps.Client(key=google_api_key)
+
+# Threading is utilized to speed up the extraction of images.
+# Threading is the best choice here because there is network latency when
+# extracting the images through the google api.
+N_JOBS = os.cpu_count() * 2  # Number of Threads to run
+THREAD_QUEUE = []  # This will be our queue to manage our threads
 
 
 def extract_geocode(address):
@@ -138,19 +148,58 @@ def extract_image(lat, lng, folder_name):
     results.save_links(f'{folder_path}/links.txt')
 
 
+def extract_images_worker():
+    """Thread worker for extracting images.
+
+    This function serves as a thread worker. This means that a single thread
+    will be running this function. This function will check to see if the
+    THREAD_QUEUE is empty or not empty. If it is not empty, the thread will
+    then utilize its resource to complete this job for the particular image.
+
+    The idea behind this stems from the Producer and Consumer problem.
+    """
+    while len(THREAD_QUEUE) > 0:
+        kwargs = THREAD_QUEUE.pop()
+        extract_image(**kwargs)
+
+
 if __name__ == '__main__':
     # Main function
+    start_time = time.time()
     print("Begin extracting coordinates.")
     data_and_geocode = extract_all_geocodes()
     data_and_geocode.to_csv(FINAL_LITTER_INDEX_FILE)
     print("Done extracting coordinates.")
 
-    # Extract images for all street locations
     print("\nBegin extracting images.")
     for idx, row in data_and_geocode.iterrows():
         lat = row['lat']
         lng = row['lng']
         object_id = row['OBJECTID']
+        
+        # Add "jobs" to our queue. A job here is just a set of kwargs that will
+        # be passed into the extract_image function
+        THREAD_QUEUE.append(
+            {
+                'lat': lat,
+                'lng': lng, 
+                'folder_name': object_id
+            }
+        )
 
-        extract_image(lat, lng, object_id)
+    # Begin threading for multiple jobs
+    image_threads = []
+    for i in range((N_JOBS)):
+        t = Thread(target=extract_images_worker)
+        t.start()
+        image_threads.append(t)
+
+    # Join threads back together
+    for t in image_threads:
+        t.join()
+    
     print("Done extracting images.")
+
+    # Display total execution time
+    total_time = round(time.time() - start_time, 2)
+    print(f"Execution time: {total_time} seconds")
