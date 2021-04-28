@@ -15,6 +15,7 @@ How to run:
 from threading import Thread
 import time
 import os
+import random
 
 import pandas as pd
 import googlemaps
@@ -45,8 +46,14 @@ def extract_geocode(address):
     address : String
         Address to search for geocode
     """
-    print(address)
-    geocode_result = GMAPS.geocode(address)
+    # Add a random number between 30 and 70 to address (i.e. 100 -> 160)
+    split_address = address.split(' ')
+    number_to_add = random.randrange(30, 80, 10)  # Rand num between 30 and 70
+    house_number = int(split_address[0]) + number_to_add  # Add num to address
+    new_address = str(house_number) + " " + " ".join(split_address[1:])
+    print(new_address)
+
+    geocode_result = GMAPS.geocode(new_address)
     return geocode_result[0]
 
 
@@ -76,20 +83,12 @@ def extract_lng(geocode):
     return geocode['geometry']['location']['lng']
 
 
-def extract_all_geocodes():
+def extract_all_geocodes(data):
     """Extract longitude and latitude coordinates for street locations.
 
     This method will extract all coordinates for every street address in our
     CSV file containing our Litter Indexes.
     """
-    # TODO: Drop duplicate addresses. Before that is done, we must understand
-    # why duplicates are happening in the first place.
-    # Read CSV
-    data = pd.read_csv(LITTER_INDEX_FILE)
-
-    # Truncating data for now because of cost... Serves as testing for now
-    data = data.iloc[:5]
-
     # Apply coordinates extractor to every row
     data['geocode_result'] = data.apply(lambda row: extract_geocode(
                     row['LR_HUNDRED_BLOCK'] + ", Philidelphia, PA"), axis=1)
@@ -123,17 +122,17 @@ def extract_image(lat, lng, folder_name):
     """
     folder_path = f'image_downloads/{folder_name}'
 
-    # Create headings 0-315 (increments of 45 degrees)
+    # Create headings 0-270 (increments of 90 degrees)
     # NOTE: We will decrease the increments due to cost of extracting images
-    headings = [x for x in range(0, 360, 45)]
+    headings = [x for x in range(0, 360, 90)]
 
     # Define parameters for street view API
     # Will create a list of params for each heading
     params = [{
-        'size': '256x256',  # Max 640x640 pixels
+        'size': '640x640',  # Max 640x640 pixels
         'location': f'{lat},{lng}',  # Coordinates
         'heading': heading,  # Direction TODO: We may want to experiment?
-        'pitch': '0',  # Orientation (up vs down)
+        'pitch': '-45',  # Orientation (up vs down)
         'key': google_api_key  # API Key
     } for heading in headings]
 
@@ -163,11 +162,58 @@ def extract_images_worker():
         extract_image(**kwargs)
 
 
+def get_data(street_class_names, score_colors):
+    """Extract data to query on.
+
+    Extracts data to extract geocodes and images for. Basic data cleaning and
+    filtering is completed in order to grab the data points that we want.
+
+    Parameters
+    ----------
+    street_class_names: List
+        Defines which street class name we want to keep.
+    score_colors: List
+        Defines which scores colors we want to keep.
+    """
+    # Read CSV
+    data = pd.read_csv(LITTER_INDEX_FILE)
+
+    # Grab streetnames whose numbers are decimal
+    data = data[
+        data['LR_HUNDRED_BLOCK'].str.split(' ', expand=True)[0].str.isdecimal()
+    ]
+
+    # Grab street class names
+    data = data[data['STREET_CLASS_NAME'].isin(street_class_names)]
+
+    # Filter scorecolors we are interested in
+    data = data[data['SCORE_COLOR'].isin(score_colors)]
+
+    # Drop duplicate street names
+    data = data.drop_duplicates('LR_HUNDRED_BLOCK')
+
+    # Remove OBJECTIDs we already completed
+    data = data[
+        ~data['OBJECTID'].astype(str).isin(os.listdir('image_downloads'))]
+
+    # Truncating data for now because of cost... Serves as testing for now
+    data = data.iloc[:2]
+
+    return data
+
+
 if __name__ == '__main__':
     # Main function
+    # Extract data given our conversations
+    data_requirements_kwargs = {
+        'street_class_names': ['Local'],
+        'score_colors': ['MAROON']
+    }
+    data = get_data(**data_requirements_kwargs)
+
     start_time = time.time()
     print("Begin extracting coordinates.")
-    data_and_geocode = extract_all_geocodes()
+    data_and_geocode = extract_all_geocodes(data)
     data_and_geocode.to_csv(FINAL_LITTER_INDEX_FILE)
     print("Done extracting coordinates.")
 
@@ -176,13 +222,13 @@ if __name__ == '__main__':
         lat = row['lat']
         lng = row['lng']
         object_id = row['OBJECTID']
-        
+
         # Add "jobs" to our queue. A job here is just a set of kwargs that will
         # be passed into the extract_image function
         THREAD_QUEUE.append(
             {
                 'lat': lat,
-                'lng': lng, 
+                'lng': lng,
                 'folder_name': object_id
             }
         )
@@ -197,7 +243,7 @@ if __name__ == '__main__':
     # Join threads back together
     for t in image_threads:
         t.join()
-    
+
     print("Done extracting images.")
 
     # Display total execution time
