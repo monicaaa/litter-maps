@@ -16,7 +16,9 @@ from threading import Thread
 import time
 import os
 import random
+from PIL import Image
 
+import numpy as np
 import pandas as pd
 import googlemaps
 import google_streetview.api
@@ -111,6 +113,9 @@ def extract_image(lat, lng, folder_name):
     longitude and latitude coordinates. This image is then saved to a file and
     the name of the file is mapped back to the ID.
 
+    https://ai.plainenglish.io/image-processing-and-classification-with-python-
+    and-keras-c368769bde26
+
     Parameters
     ----------
     lat : String
@@ -145,6 +150,29 @@ def extract_image(lat, lng, folder_name):
 
     # Save links - Won't need to use, but nice to have
     results.save_links(f'{folder_path}/links.txt')
+
+    # Convert to image to pixel value & save
+    data = []
+    for image in os.listdir(folder_path):
+        if image.endswith('.jpg'):
+            im = Image.open(folder_path + "/" + image)  # Load image
+            # Clean image
+            img = im.convert('RGB')  # Ensures correct color channel
+            # img_resize = img_cs.resize(640, 640)  # Ensures correct size
+            img_array = np.asarray(img)  # Extracts pixels
+            # Append objectID to file
+            img_array = np.append(img_array, int(folder_name))
+            data.append(img_array)
+
+    # Save and reshape data
+    data_array = np.array(data)
+    data_array = data_array.reshape(4, 640 * 640 * 3 + 1)  # Plus one for label
+
+    # Append data_array to data file
+    with open('data/pixel_data', 'ab') as f:
+        np.savetxt(f, data_array, delimiter=",", fmt='%f')
+
+    # To Load run: arr = np.loadtxt('data/pixel_data', delimiter=",")
 
 
 def extract_images_worker():
@@ -197,7 +225,7 @@ def get_data(street_class_names, score_colors):
         ~data['OBJECTID'].astype(str).isin(os.listdir('image_downloads'))]
 
     # Truncating data for now because of cost... Serves as testing for now
-    data = data.iloc[:2]
+    data = data.iloc[:1]
 
     return data
 
