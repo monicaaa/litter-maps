@@ -106,7 +106,7 @@ def extract_all_geocodes(data):
     return data
 
 
-def extract_image(lat, lng, folder_name, street_score):
+def extract_image(lat, lng, folder_name):
     """Extract image for given latitude and longitude coordinate.
 
     Uses the google street view API to an extract an image from a specified
@@ -124,8 +124,6 @@ def extract_image(lat, lng, folder_name, street_score):
         Longitude of interest
     folder_name : String
         Location to save our files
-    street_score : float
-        Score of the images
     """
     folder_path = f'image_downloads/{folder_name}'
 
@@ -267,7 +265,6 @@ if __name__ == '__main__':
         lat = row['lat']
         lng = row['lng']
         object_id = row['OBJECTID']
-        score = row['HUNDRED_BLOCK_SCORE']
 
         # Add "jobs" to our queue. A job here is just a set of kwargs that will
         # be passed into the extract_image function
@@ -275,8 +272,7 @@ if __name__ == '__main__':
             {
                 'lat': lat,
                 'lng': lng,
-                'folder_name': object_id,
-                'street_score': score
+                'folder_name': object_id
             }
         )
 
