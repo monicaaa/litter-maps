@@ -219,10 +219,11 @@ def get_data(street_class_names, score_colors):
 
     # Drop duplicate street names
     data = data.drop_duplicates('LR_HUNDRED_BLOCK')
-
-    # Remove OBJECTIDs we already completed
-    data = data[
-        ~data['OBJECTID'].astype(str).isin(os.listdir('image_downloads'))]
+    
+    if 'image_downloads' in os.listdir():
+        # Remove OBJECTIDs we already completed
+        data = data[
+            ~data['OBJECTID'].astype(str).isin(os.listdir('image_downloads'))]
 
     # Truncating data for now because of cost... Serves as testing for now
     data = data.iloc[:1]
