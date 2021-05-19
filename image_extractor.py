@@ -151,29 +151,6 @@ def extract_image(lat, lng, folder_name):
     # Save links - Won't need to use, but nice to have
     results.save_links(f'{folder_path}/links.txt')
 
-    # Convert to image to pixel value & save
-    data = []
-    for image in os.listdir(folder_path):
-        if image.endswith('.jpg'):
-            im = Image.open(folder_path + "/" + image)  # Load image
-            # Clean image
-            img = im.convert('RGB')  # Ensures correct color channel
-            # img_resize = img_cs.resize(640, 640)  # Ensures correct size
-            img_array = np.asarray(img)  # Extracts pixels
-            # Append objectID to file
-            img_array = np.append(img_array, int(folder_name))
-            data.append(img_array)
-
-    # Save and reshape data
-    data_array = np.array(data)
-    data_array = data_array.reshape(4, 640 * 640 * 3 + 1)  # Plus one for label
-
-    # Append data_array to data file
-    with open('data/pixel_data', 'ab') as f:
-        np.savetxt(f, data_array, delimiter=",", fmt='%f')
-
-    # To Load run: arr = np.loadtxt('data/pixel_data', delimiter=",")
-
 
 def extract_images_worker():
     """Thread worker for extracting images.
@@ -231,6 +208,44 @@ def get_data(street_class_names, score_colors):
     return data
 
 
+def extract_pixel_data():
+    """Extract pixel data from all images."""
+    # Read in original data set
+    litter_index = pd.read_csv("data/Litter_Index_Blocks.csv")
+
+    # Iterate through all image data and extract pixels
+    image_folders = os.listdir("image_downloads")
+    for folder in image_folders:
+        print(folder)
+        # Obtain street score for set of images
+        street_score = litter_index[litter_index['OBJECTID'] == int(folder)]\
+            ['HUNDRED_BLOCK_SCORE'].iloc[0]
+
+        # Convert to image to pixel value & save
+        folder_path = "image_downloads/" + folder  # Path to folder
+        data = []
+        for image in os.listdir(folder_path):
+            if image.endswith('.jpg'):
+                im = Image.open(folder_path + "/" + image)  # Load image
+                # Clean image
+                img = im.convert('RGB')  # Ensures correct color channel
+                # img_resize = img_cs.resize(640, 640)  # Ensures correct size
+                img_array = np.asarray(img)  # Extracts pixels
+                # Append objectID to file
+                img_array = np.append(img_array, street_score)  # Append target
+                data.append(img_array)
+
+        # Save and reshape data
+        data_array = np.array(data)
+        data_array = data_array.reshape(4, 640 * 640 * 3 + 1)
+
+        # Append data_array to data file
+        with open('data/pixel_data', 'ab') as f:
+            np.savetxt(f, data_array, delimiter=",", fmt='%f')
+
+        # To Load run: arr = np.loadtxt('data/pixel_data', delimiter=",")
+
+
 if __name__ == '__main__':
     # Main function
     # Extract data given our conversations
@@ -274,6 +289,10 @@ if __name__ == '__main__':
         t.join()
 
     print("Done extracting images.")
+
+    print("\nBegin extracting pixel data.")
+    extract_pixel_data()
+    print("Done extracting pixel data.")
 
     # Display total execution time
     total_time = round(time.time() - start_time, 2)
